@@ -17,8 +17,13 @@ def task1():
     if args.medals:
         output_file = None
         idx = 0
-        if args.output is not None:
-            output_file = open(args.output, "w")
+        gold_medals = 0
+        silver_medals = 0
+        bronze_medals = 0
+        medalists = 0
+        store = {}
+        # if args.output is not None:
+        #     output_file = open(args.output, "w")
         with open(args.filename, "r") as file:
             for line in file.readlines():
                 data = line.strip().split("\t")
@@ -26,15 +31,22 @@ def task1():
                     head = data
                     is_first_line = False
                     continue
-                if args.country == data[head.index("NOC")] and args.year == data[head.index("Year")]:
-                    print(line.strip())
-                    if output_file is not None:
-                        idx += 1
-                        output_file.write(str(idx) + ",".join(data) + "\n")
-        if output_file is not None:
-            output_file.close()
-    # файл для виведення результатів (output_file)
 
+                if args.country == data[head.index("NOC")] and args.year == data[head.index("Year")]:
+                    if data[head.index("Medal")]  == "Gold":
+                        gold_medals += 1
+                    elif data[head.index("Medal")] == "Silver":
+                        silver_medals += 1
+                    elif data[head.index("Medal")] == "Bronze":
+                        bronze_medals += 1
+        print(f'The quantity of medals of {args.country} medalists in {args.year}:\nGold: {gold_medals};\nsilver: {silver_medals};\nbronze: {bronze_medals}.\n')
+        #             if output_file is not None:
+        #                 idx += 1
+        #                 output_file.write(str(idx) + ",".join(data) + "\n")
+        #
+        # if output_file is not None:
+        #     output_file.close()
+    # файл для виведення результатів (output_file)
 
 def task2():
     pass
