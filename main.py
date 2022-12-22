@@ -1,5 +1,6 @@
 import argparse
-from tabulate import tabulate
+from typing import List
+import tabulate
 
 parser = argparse.ArgumentParser(description="File parser.")
 parser.add_argument("--filename", "-f", required=True)
@@ -11,6 +12,8 @@ parser.add_argument("--total", action="store_true", required=False)
 parser.add_argument('--overall', nargs="*")
 parser.add_argument("--interactive", action="store_true", required=False)
 
+
+# do a separate head function?
 
 
 def task1():
@@ -64,7 +67,7 @@ def task2():
     is_first_line = True
     args = parser.parse_args()
     countries_medalists = []
-    dict_medalists = {'Country': 'Gold | Silver | Bronze'}
+    dict_medalists = {}
     country_and_type_of_medal = []
     if args.total:
         if int(args.year) < 1994:
@@ -84,35 +87,35 @@ def task2():
                         if data[head.index("Medal")] != "NA":
                             each_participants_country_and_medal = [data[head.index("Team")], data[head.index("Medal")]]
                             country_and_type_of_medal.append(each_participants_country_and_medal)
-                            country_and_type_of_medal.sort()
                             if country not in countries_medalists:
                                 countries_medalists.append(country)
-                                countries_medalists.sort()
+                            #country_and_type_of_medal.sort()
+                            #countries_medalists.sort()
+                            else:
+                                for country in countries_medalists:
+                                    gold_medals = 0
+                                    silver_medals = 0
+                                    bronze_medals = 0
+                                    for m in range(len(country_and_type_of_medal)):
+                                        if country == country_and_type_of_medal[m][0]:
+                                            if country_and_type_of_medal[m][1] == 'Gold':
+                                                gold_medals = gold_medals + 1
+                                            elif country_and_type_of_medal[m][1] == 'Silver':
+                                                silver_medals = silver_medals + 1
+                                            elif country_and_type_of_medal[m][1] == 'Bronze':
+                                                bronze_medals = bronze_medals + 1
+                                            dict_medalists.update({country: [gold_medals, silver_medals, bronze_medals]})
 
-        for country in countries_medalists:
-            gold_medals = 0
-            silver_medals = 0
-            bronze_medals = 0
-            for m in range(len(country_and_type_of_medal)):
-                if country == country_and_type_of_medal[m][0]:
-                    if country_and_type_of_medal[m][1] == 'Gold':
-                        gold_medals = gold_medals + 1
-                    elif country_and_type_of_medal[m][1] == 'Silver':
-                        silver_medals = silver_medals + 1
-                    elif country_and_type_of_medal[m][1] == 'Bronze':
-                        bronze_medals = bronze_medals + 1
-                medals = [gold_medals, silver_medals, bronze_medals]
-                str_medals = [str(i) for i in medals]
-                dict_medalists.update({country: ' | '.join(str_medals)})
-
-        #table = [['Country', 'Gold', 'Silver', 'Bronze'], [country, gold_medals, silver_medals, bronze_medals]]
-        #print(tabulate.tabulate(table, headers='firstrow', tablefmt='fancy_grid'))
-
-        for key, value in dict_medalists.items():
-            print(key, ': ', value)
-
-
+        sorted_dict = sorted(dict_medalists.items(), key=lambda x:x[1], reverse=True)
+        converted_dict = dict(sorted_dict)
+        headers = ['Country', 'Gold', 'Silver', 'Bronze']
+        table = []
+        for key, value in converted_dict.items():
+            table.append([key, value[0], value[1], value[2]])
+        print(tabulate.tabulate(table, headers=headers, tablefmt='fancy_grid'))
+m
 # TERMINAL KEY - python main.py --total --filename athlete_events.tsv --year 1972
+
 
 def task3():
     head = None
@@ -160,16 +163,26 @@ def task4():
     head = None
     is_first_line = True
     args = parser.parse_args()
+    country = None
+    first_year = None
+    first_season = None
+    first_location = None
     countrys_stats = []
     all_info = []
-    first_participation = {'Country / NOC': 'Year | Type of games | Location'}
-    the_most_successful = {'Country / NOC': 'The most successful games | Number of medals'}
-    the_least_successful = {'Country / NOC': 'The most successful games | Number of medals'}
-    average_for_games = {'Country / NOC': 'Gold | Silver | Bronze'}
-    country = None
+    least_successful_year = None
+    most_successful_year = None
+    #first_participation = {}
+    #the_most_successful = {'Country / NOC': 'The most successful games | Number of medals'}
+    #the_least_successful = {'Country / NOC': 'The most successful games | Number of medals'}
+    #average_for_games = {'Country / NOC': 'Gold | Silver | Bronze'}
+    all_participations = []
+    all_years_and_medals = []
+    counted_medals_per_games = {}
+    all_years = []
+
     if args.interactive:
         country = input('Enter a country or a NOC: ')
-        #print(country) # + statistic
+        # print(country) # + statistic
         with open(args.filename, "r") as file:
             for line in file.readlines():
                 data = line.strip().split("\t")
@@ -178,31 +191,61 @@ def task4():
                     is_first_line = False
                     continue
                 if country == data[head.index("Team")] or country == data[head.index("NOC")]:
-                    info = [data[head.index("Year")], data[head.index("Games")], data[head.index("City")]]
-                    if info not in all_info:
-                        all_info.append(info)
-                        all_info.sort()
-                    #first_participation = data[head.index("Year")]
-                    #the_most_successful = data[head.index("Games")]
-                    #the_least_successful = data[head.index("Games")]
-                        #avarage =
-                    #countrys_stats.append(country)
+                    year = data[head.index("Year")]
+                    season = data[head.index("Season")]
+                    location = data[head.index("City")]
+                    medal = data[head.index("Medal")]
+                    participation = [year, season, location]
+                    year_medal = [year, medal]
+                    all_years_and_medals.append(year_medal)
+                    if participation not in all_participations:
+                        all_participations.append(participation)
+                        all_years.append(year)
+                    else:
+                        for each_year in all_years:
+                            gold_medals = 0
+                            silver_medals = 0
+                            bronze_medals = 0
+                            for n in range(len(all_years_and_medals)):
+                                if each_year == all_years_and_medals[n][0]:
+                                    if all_years_and_medals[n][1] == 'Gold':
+                                        gold_medals = gold_medals + 1
+                                    elif all_years_and_medals[n][1] == 'Silver':
+                                        silver_medals = silver_medals + 1
+                                    elif all_years_and_medals[n][1] == 'Bronze':
+                                        bronze_medals = bronze_medals + 1
+                                    counted_medals_per_games.update({each_year: [gold_medals, silver_medals, bronze_medals]})
 
-    first_participation_stats = [all_info[0][0], all_info[0][1], all_info[0][2]]
-    str_first_participation = [str(i) for i in first_participation_stats]
-    first_participation.update({country: ' | '.join(str_first_participation)})
-    print(f'\nThe first participation in the Olympic Games')
-    for key, value in first_participation.items():
-        print(key, ': ', value)
-    print(f'\nThe most successful Games')
-    for key, value in the_most_successful.items():
-        print(key, ': ', value)
-    print(f'\nThe least successful Games')
-    for key, value in the_least_successful.items():
-        print(key, ': ', value)
-    print(f'\nThe average of medals per Games')
-    for key, value in average_for_games.items():
-        print(key, ': ', value)
+        #print(tabulate.tabulate(table, headers='firstrow', tablefmt='fancy_grid'))
+        all_participations.sort()  # Сортуємо за першим значенням - за роком
+        print(all_participations)
+        #first_participation = all_participations[0]  # а [0] - найменший рік
+        first_year = all_participations[0][0]
+        first_season = all_participations[0][1]
+        first_location = all_participations[0][2]
+
+        print(f'\nThe first participation in the Olympic Games')
+        table_first_participation = [['Year', 'Season of games', 'Location'], [first_year, first_season, first_location]]
+        print(tabulate.tabulate(table_first_participation, headers='firstrow', tablefmt='fancy_grid'))
+
+        sorted_dict = sorted(counted_medals_per_games.items(), key=lambda x:x[1], reverse=True)
+        converted_dict = dict(sorted_dict)
+
+        successful = list(converted_dict.items())[0]
+        #print(type(successful))
+        #print(successful)
+        print(f'\nThe most successful Games')
+        table_most_successful = ['Games', 'Gold', 'Silver', 'Bronze'], [successful[0], successful[1][0], successful[1][1], successful[1][2]]
+        print(tabulate.tabulate(table_most_successful, headers='firstrow', tablefmt='fancy_grid'))
+
+        unsuccessful = list(converted_dict.items())[-1]
+        print(f'\nThe least successful Games')
+        table_least_succesful = ['Games', 'Gold', 'Silver', 'Bronze'], [unsuccessful[0], unsuccessful[1][0], unsuccessful[1][1], unsuccessful[1][2]]
+        print(tabulate.tabulate(table_least_succesful, headers='firstrow', tablefmt='fancy_grid'))
+
+        print(f'\nThe average of medals per Games')
+        table_average_medals = [['Gold', 'Silver', 'Bronze', 'Total'], []]
+        print(tabulate.tabulate(table_average_medals, headers='firstrow', tablefmt='fancy_grid'))
 
 
 # TERMINAL KEY - python main.py --interactive -f athlete_events.tsv
