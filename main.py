@@ -1,6 +1,6 @@
 import argparse
-from typing import List
 import tabulate
+
 
 parser = argparse.ArgumentParser(description="File parser.")
 parser.add_argument("--filename", "-f", required=True)
@@ -108,12 +108,15 @@ def task2():
 
         sorted_dict = sorted(dict_medalists.items(), key=lambda x:x[1], reverse=True)
         converted_dict = dict(sorted_dict)
+        #print(sorted_dict)
+        #print(type(sorted_dict))
+        #print(converted_dict)
         headers = ['Country', 'Gold', 'Silver', 'Bronze']
         table = []
         for key, value in converted_dict.items():
             table.append([key, value[0], value[1], value[2]])
         print(tabulate.tabulate(table, headers=headers, tablefmt='fancy_grid'))
-m
+
 # TERMINAL KEY - python main.py --total --filename athlete_events.tsv --year 1972
 
 
@@ -131,7 +134,7 @@ def task3():
                     is_first_line = False
                     continue
 
-                if args.overall and data[head.index("Medal")] != 'NA\n':
+                if args.overall and data[head.index("Medal")] != 'NA':
                     for i, country in enumerate(args.overall):
                         if country in data:
                             if data[head.index("Year")] not in overall_countries[i]:
@@ -141,12 +144,14 @@ def task3():
         max_overall_countries = ""
         min_overall_countries = ""
         average_overall_countries = ""
+        print(overall_countries)
         for i in range(len(overall_countries)):
             numbers_of_medals = [int(x) for x in overall_countries[i].values() if int(x) != 0]
             max_value = max(numbers_of_medals)
             min_value = min(numbers_of_medals)
-            average_value = round(sum(numbers_of_medals)/len(numbers_of_medals))
             years_of_medals = [x for x in overall_countries[i].keys()]
+            average_value = round(sum(numbers_of_medals)/len(years_of_medals))
+            print(len(years_of_medals), numbers_of_medals)
             max_year = years_of_medals[numbers_of_medals.index(max_value)]
             min_year = years_of_medals[numbers_of_medals.index(min_value)]
 
@@ -158,31 +163,20 @@ def task3():
         print(min_overall_countries)
         print(average_overall_countries)
 
+# python main.py --filename athlete_events.tsv --overall USA Ukraine France
+
 
 def task4():
     head = None
     is_first_line = True
     args = parser.parse_args()
     country = None
-    first_year = None
-    first_season = None
-    first_location = None
-    countrys_stats = []
-    all_info = []
-    least_successful_year = None
-    most_successful_year = None
-    #first_participation = {}
-    #the_most_successful = {'Country / NOC': 'The most successful games | Number of medals'}
-    #the_least_successful = {'Country / NOC': 'The most successful games | Number of medals'}
-    #average_for_games = {'Country / NOC': 'Gold | Silver | Bronze'}
     all_participations = []
     all_years_and_medals = []
     counted_medals_per_games = {}
     all_years = []
-
     if args.interactive:
         country = input('Enter a country or a NOC: ')
-        # print(country) # + statistic
         with open(args.filename, "r") as file:
             for line in file.readlines():
                 data = line.strip().split("\t")
@@ -191,21 +185,21 @@ def task4():
                     is_first_line = False
                     continue
                 if country == data[head.index("Team")] or country == data[head.index("NOC")]:
-                    year = data[head.index("Year")]
-                    season = data[head.index("Season")]
+                    games = data[head.index("Games")]
                     location = data[head.index("City")]
                     medal = data[head.index("Medal")]
-                    participation = [year, season, location]
-                    year_medal = [year, medal]
+                    participation = [games, location]
+                    year_medal = [games, medal]
                     all_years_and_medals.append(year_medal)
                     if participation not in all_participations:
                         all_participations.append(participation)
-                        all_years.append(year)
+                        all_years.append(games)
                     else:
                         for each_year in all_years:
                             gold_medals = 0
                             silver_medals = 0
                             bronze_medals = 0
+                            total = 0
                             for n in range(len(all_years_and_medals)):
                                 if each_year == all_years_and_medals[n][0]:
                                     if all_years_and_medals[n][1] == 'Gold':
@@ -214,38 +208,52 @@ def task4():
                                         silver_medals = silver_medals + 1
                                     elif all_years_and_medals[n][1] == 'Bronze':
                                         bronze_medals = bronze_medals + 1
-                                    counted_medals_per_games.update({each_year: [gold_medals, silver_medals, bronze_medals]})
+                                    total = gold_medals + silver_medals + bronze_medals
+                                    counted_medals_per_games.update({each_year: [total, gold_medals, silver_medals, bronze_medals]})
 
-        #print(tabulate.tabulate(table, headers='firstrow', tablefmt='fancy_grid'))
+
         all_participations.sort()  # Сортуємо за першим значенням - за роком
         print(all_participations)
-        #first_participation = all_participations[0]  # а [0] - найменший рік
-        first_year = all_participations[0][0]
-        first_season = all_participations[0][1]
-        first_location = all_participations[0][2]
+
+        first_games = all_participations[0][0]
+        first_location = all_participations[0][1]
 
         print(f'\nThe first participation in the Olympic Games')
-        table_first_participation = [['Year', 'Season of games', 'Location'], [first_year, first_season, first_location]]
+        table_first_participation = [['Games', 'Location'], [first_games, first_location]]
         print(tabulate.tabulate(table_first_participation, headers='firstrow', tablefmt='fancy_grid'))
 
-        sorted_dict = sorted(counted_medals_per_games.items(), key=lambda x:x[1], reverse=True)
-        converted_dict = dict(sorted_dict)
+        sorted_list = sorted(counted_medals_per_games.items(), key=lambda x:x[1], reverse=True)
 
-        successful = list(converted_dict.items())[0]
-        #print(type(successful))
-        #print(successful)
+        successful = sorted_list[0]
         print(f'\nThe most successful Games')
-        table_most_successful = ['Games', 'Gold', 'Silver', 'Bronze'], [successful[0], successful[1][0], successful[1][1], successful[1][2]]
+        table_most_successful = ['Games', 'Total', 'Gold', 'Silver', 'Bronze'], [successful[0], successful[1][0], successful[1][1], successful[1][2], successful[1][3]]
         print(tabulate.tabulate(table_most_successful, headers='firstrow', tablefmt='fancy_grid'))
 
-        unsuccessful = list(converted_dict.items())[-1]
+        unsuccessful = sorted_list[-1]
         print(f'\nThe least successful Games')
-        table_least_succesful = ['Games', 'Gold', 'Silver', 'Bronze'], [unsuccessful[0], unsuccessful[1][0], unsuccessful[1][1], unsuccessful[1][2]]
+        table_least_succesful = ['Games', 'Total', 'Gold', 'Silver', 'Bronze'], [unsuccessful[0], unsuccessful[1][0], unsuccessful[1][1], unsuccessful[1][2], unsuccessful[1][3]]
         print(tabulate.tabulate(table_least_succesful, headers='firstrow', tablefmt='fancy_grid'))
 
+        total_total = 0
+        total_gold_medals = 0
+        total_silver_medals = 0
+        total_bronze_medals = 0
+        #print(counted_medals_per_games)
+        for year, value in counted_medals_per_games.items():
+            total_total = total_total + int(value[0])
+            total_gold_medals = total_gold_medals + int(value[1])
+            total_silver_medals = total_silver_medals + int(value[2])
+            total_bronze_medals = total_bronze_medals + int(value[3])
+
+        #average_total = total_total / len(all_years)
+        average_gold_medals = round(total_gold_medals / len(all_years))
+        average_silver_medals = round(total_silver_medals / len(all_years))
+        average_bronze_medals = round(total_bronze_medals / len(all_years))
+        average_total = average_gold_medals + average_silver_medals + average_bronze_medals
         print(f'\nThe average of medals per Games')
-        table_average_medals = [['Gold', 'Silver', 'Bronze', 'Total'], []]
+        table_average_medals = [['Total', 'Gold', 'Silver', 'Bronze'], [average_total, average_gold_medals, average_silver_medals, average_bronze_medals]]
         print(tabulate.tabulate(table_average_medals, headers='firstrow', tablefmt='fancy_grid'))
+        print(average_total, average_gold_medals, average_silver_medals, average_bronze_medals)
 
 
 # TERMINAL KEY - python main.py --interactive -f athlete_events.tsv
@@ -253,9 +261,9 @@ def task4():
 
 def main():
     task1()
-    # task2()
-    # task3()
-    # task4()
+    task2()
+    task3()
+    task4()
 
 
 if __name__ == "__main__":
